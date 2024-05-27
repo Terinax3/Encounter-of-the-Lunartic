@@ -37,3 +37,5 @@ In this new adventure, the player's skill and Pepper's tenacity are put to the t
 and explore the vast reaches of space.</p>
 
 🧠 Creators: Tereza @Terinax3, Jonatan @JonatanS23
+
+If you would like to check out the first game, Pawsome Meowterspace, you can find it here: [Pawsome Meowterspace](https://github.com/Terinax3/Pawsome-Meowterspace)
