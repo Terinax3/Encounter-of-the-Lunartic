@@ -1,4 +1,6 @@
-<h2>Pawsome Meowterspace: Encounter of the Lunartic</h2>
+<h2>Pawsome Meowterspace: Encounter of the Lunartic</h2><br>
+![Encounter of the Lunartic Preview Image](https://github.com/Terinax3/Encounter-of-the-Lunartic/assets/148349202/7a8b4fe7-8820-4a0e-a770-e8dbb97f1a95)
+<br><br>
 🚸 JS Game - school project assignment 🚸
 
 
