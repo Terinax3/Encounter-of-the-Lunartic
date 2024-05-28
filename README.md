@@ -1,4 +1,4 @@
-<h2>Pawsome Meowterspace: Encounter of the Lunartic</h2><br>
+<h2>Pawsome Meowterspace: Encounter of the Lunartic</h2>
 🚸 JS Game - school project assignment 🚸
 
 
