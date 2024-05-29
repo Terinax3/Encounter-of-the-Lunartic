@@ -1,5 +1,9 @@
 <h2>Pawsome Meowterspace: Encounter of the Lunartic</h2>
 🚸 JS Game - school project assignment 🚸
+<br><br>
+Click here to play:<br>
+https://terinax3.github.io/Encounter-of-the-Lunartic/
+<br>
 
 
 <h3>🧬 About 🧬</h3>
