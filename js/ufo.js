@@ -37,7 +37,7 @@ export default class Ufo {
     rect(x - 30, y - 65, 60, 40, 9);
     // Ears
     beginShape();
-    vertex(x + 2 + 30, y - 59);
+    vertex(x +  30, y - 59);
     bezierVertex(x + 22, y - 91, x + 2 + 14, y - 60, x + 2 + 10, y - 65);
     endShape();
     beginShape();
