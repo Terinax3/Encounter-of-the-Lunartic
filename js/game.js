@@ -132,7 +132,7 @@ menuBtn.addEventListener("click", function () {
 });
 
 function preload() {
-  title = loadImage("img/titledark.png");
+  title = loadImage("img/titledark2.png");
   controls = loadImage("img/controlscircles.png");
 }
 window.preload = preload;
