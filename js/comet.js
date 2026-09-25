@@ -1,3 +1,4 @@
+import { worldWidth as width, worldHeight as height } from "./screen.js";
 export default class Comet {
   constructor(x, y, speed) {
     this.x = x;
@@ -9,8 +10,8 @@ export default class Comet {
     this.x += this.speed;
     this.y += this.speed;
 
-    if (this.y > windowHeight + 100) {
-      this.x = random(windowWidth);
+    if (this.y > height + 100) {
+      this.x = random(width);
       this.y = 0;
     }
   }

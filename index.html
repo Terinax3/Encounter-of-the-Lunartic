@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Pawsome Meowterspace: Encounter of the Lunartic</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="js/game.js" type="module" defer></script>
@@ -18,25 +20,10 @@
     <link rel="icon" type="image/x-icon" href="img/iconz.ico" />
     <link rel="stylesheet" href="game.css" />
     <link rel="stylesheet" href="https://use.typekit.net/xuh2gep.css" />
-    <style>
-      canvas {
-        border: none;
-        display: block;
-        margin: auto;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        font-family: Arial, Helvetica, sans-serif;
-        color: black;
-        font-weight: 900;
-        font-style: normal;
-        cursor: none;
-      }
-    </style>
+
   </head>
   <body>
+    <main id="game-stage">
     <div id="menu">
       <div class="menu-flex">
         <button id="difficulty-bttn" title="Choose Difficulty">
@@ -52,5 +39,13 @@
       </div>
     </div>
     <button id="menu-bttn">Menu</button>
+    </main>
+    <section id="rotate-screen" hidden aria-labelledby="rotate-title">
+      <div>
+        <h1 id="rotate-title">Play in landscape</h1>
+        <p id="rotate-help">Turn your phone or iPad sideways to play.</p>
+        <button id="landscape-button">Enter landscape</button>
+      </div>
+    </section>
   </body>
 </html>

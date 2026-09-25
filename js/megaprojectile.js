@@ -1,3 +1,4 @@
+import { worldWidth as width, worldHeight as height } from "./screen.js";
 export default class MegaProjectile {
   constructor(x, y, speed) {
     this.x = x;
@@ -11,9 +12,9 @@ export default class MegaProjectile {
   updatePosition() {
     this.x -= this.speed;
 
-    if (this.x < 0) {
-      this.x = windowWidth;
-      this.y = windowHeight / 2 + random(-350, 350);
+    if (this.x < -170) {
+      this.x = width;
+      this.y = height / 2 + random(-height * 0.324, height * 0.324);
     }
   }
 

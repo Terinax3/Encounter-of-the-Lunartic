@@ -1,3 +1,4 @@
+import { worldWidth as width, worldHeight as height } from "./screen.js";
 export default class Ufo {
   constructor(x, y) {
     this.x = x;

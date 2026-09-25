@@ -1,3 +1,4 @@
+import { worldWidth as width, worldHeight as height } from "./screen.js";
 export default class HealthBuff {
   constructor(x, y, speed) {
     this.x = x;
@@ -12,8 +13,8 @@ export default class HealthBuff {
     this.x -= this.speed;
 
     if (this.x < 0) {
-      this.x = windowWidth;
-      this.y = random(windowHeight);
+      this.x = width;
+      this.y = random(height);
     }
   }
 

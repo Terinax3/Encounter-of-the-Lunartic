@@ -1,3 +1,4 @@
+import { worldWidth, worldHeight } from "./screen.js";
 export default class Moon {
   constructor(x, y) {
     this.x = x;
@@ -5,7 +6,11 @@ export default class Moon {
   }
 
   draw() {
-    let scaleFactor = min(width, height) / 1000; // Scale factor based on canvas size
+    push();
+    translate(worldWidth - 1920, (worldHeight - 1080) / 2);
+    const width = 1920;
+    const height = 1080;
+    const scaleFactor = 1.08;
 
     // No stroke for all shapes
     noStroke();
@@ -217,5 +222,6 @@ export default class Moon {
       height / 1.95
     );
     endShape();
+    pop();
   }
 }

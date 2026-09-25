@@ -1,3 +1,12 @@
+import { createSpaceBackground } from "./background.js";
+let spaceBackground;
+import { createJoystick } from "./joystick.js";
+let joystick;
+import { setupLandscape, landscapeRequired } from "./landscape.js";
+import { worldWidth as width, worldHeight as height, screenScale, canvasWidth, canvasHeight, updateScreen, remapPosition, screenPoint } from "./screen.js";
+let mouseX = 0;
+let mouseY = 0;
+
 //MODULES
 import MegaProjectile from "./megaprojectile.js";
 let megaprojectiles = [];
@@ -85,7 +94,7 @@ aurahit.addEventListener("error", function (err) {
   console.error("Error loading audio:", err);
 });
 //STARRY SKY INSPIRATION FROM LECTURES
-let stars = [];
+
 
 // MENU BUTTON ELEMENTS
 const difficultyBtn = document.getElementById("difficulty-bttn");
@@ -125,6 +134,7 @@ controlsBtn.addEventListener("click", function () {
 });
 
 menuBtn.addEventListener("click", function () {
+  showTitle = false;
   console.log("Menu Button Clicked!");
 
   menu.style.display = "block";
@@ -138,7 +148,19 @@ function preload() {
 window.preload = preload;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  updateScreen(window.innerWidth, window.innerHeight);
+  pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+  const canvas = createCanvas(canvasWidth, canvasHeight);
+  canvas.parent("game-stage");
+  canvas.elt.addEventListener("pointerdown", () => {
+    if (state === "title" && !landscapeRequired()) showTitle = false;
+  });
+  fitStage();
+  setupLandscape();
+  spaceBackground = createSpaceBackground();
+  joystick = createJoystick(document.getElementById("game-stage"));
+  ufox.x = width * (450 / 1920);
+  ufox.y = height * (500 / 1080);
   window.addEventListener("resize", windowResized);
 
   // Initialize comets
@@ -147,16 +169,6 @@ function setup() {
     let y = Math.random() * height;
     let speed = random(0.3, 1.5);
     comets.push(new Comet(x, y, speed));
-  }
-
-  // Initialize stars
-  for (let i = 0; i < 400; i++) {
-    const star = {
-      x: Math.random() * width,
-      y: Math.random() * height,
-      alpha: Math.random(0.1, 5),
-    };
-    stars.push(star);
   }
 
   //commenceArrowProjectiles();
@@ -195,6 +207,16 @@ function setup() {
 window.setup = setup;
 
 function draw() {
+  const portraitBlocked = landscapeRequired();
+  joystick.setEnabled(!portraitBlocked && ["game", "infinite", "winState"].includes(state));
+  spaceBackground.draw(performance.now(), screenScale);
+  if (portraitBlocked) return;
+  // Scale every drawing command, including stroke widths, text and images.
+  // The world fills the viewport; artwork uses the same scale on both axes.
+  mouseX = window.mouseX / screenScale;
+  mouseY = window.mouseY / screenScale;
+  push();
+  scale(screenScale);
   // Set current state and draw based on said state
   drawGeneral();
   if (state === "pause") {
@@ -221,12 +243,12 @@ function draw() {
     //Stashed changes
   } else if (state === "winState") {
     winState();
-    if (ufox.x >= windowWidth + 100) {
-      ufox.x = windowWidth + 100;
+    if (ufox.x >= width + 100) {
+      ufox.x = width + 100;
     } else if (ufox.x <= 150) {
       ufox.x = 150;
-    } else if (ufox.y >= windowHeight - 150) {
-      ufox.y = windowHeight - 150;
+    } else if (ufox.y >= height - 150) {
+      ufox.y = height - 150;
     } else if (ufox.y <= 150) {
       ufox.y = 150;
     }
@@ -238,11 +260,13 @@ function draw() {
   drawCursor();
   removeTitle();
   restartGame();
+  pop();
 }
 window.draw = draw;
 
 // Searched how to use keyRelease rather than keyDown - help through p5's website
 function keyReleased() {
+  if (landscapeRequired()) return;
   if (keyCode === 27) {
     if (state === "pause") {
       state = "game";
@@ -270,12 +294,11 @@ function removeTitle() {
 // START TITLE
 function drawTitle() {
   if (showTitle) {
-    // Center the image
-    let imageX = (windowWidth - title.width * 0.6) / 2;
-    let imageY = (windowHeight - title.height * 0.6) / 1.8;
-
-    // Draw the image with calculated position and scaled dimensions
-    image(title, imageX, imageY, title.width * 0.6, title.height * 0.6);
+    // Fit the intro inside the playfield, retaining the image's aspect ratio.
+    const fit = Math.min(width * 0.60 / title.width, height * 0.78 / title.height);
+    const w = title.width * fit;
+    const h = title.height * fit;
+    image(title, (width - w) / 2, (height - h) / 2, w, h);
   }
 }
 window.drawTitle = drawTitle;
@@ -336,17 +359,16 @@ function drawRestart() {
 
 document.addEventListener("mousedown", (event) => {
   // help from Chatgpt with "clickX" and "clickY" events: https://chatgpt.com/share/4977b91f-2a6b-4742-9dfd-1fe95a3c28d1
-  const clickX = event.clientX;
-  const clickY = event.clientY;
+  const canvas = document.querySelector("#game-stage canvas");
+  if (!canvas || event.target !== canvas || landscapeRequired()) return;
+  const { x: clickX, y: clickY } = screenPoint(event.clientX, event.clientY, canvas.getBoundingClientRect());
 
   if (
     (clickX >= width / 2 - 150 &&
       clickX <= width / 2 + restartWidth - 150 &&
       clickY >= height / 1.5 - 50 &&
       clickY <= height / 1.5 + restartHeight - 50 &&
-      state === "gameOver") ||
-    state === "winState" ||
-    state === "infiniteGameOver" // Check if the mouse is on top of the restart text when the state is set to "gameOver" or "winState"
+      ["gameOver", "winState", "infiniteGameOver"].includes(state)) // Check if the mouse is on top of the restart text when the state is set to "gameOver" or "winState"
   ) {
     location.reload();
   }
@@ -365,10 +387,11 @@ function restartGame() {
 }
 
 function drawControls() {
-  let w = controls.width * 0.7;
-  let h = controls.height * 0.7;
+  const fit = Math.min(width * 0.8 / controls.width, height * 0.75 / controls.height);
+  let w = controls.width * fit;
+  let h = controls.height * fit;
 
-  image(controls, windowWidth / 2 - w / 2, windowHeight / 2 - h / 2, w, h);
+  image(controls, width / 2 - w / 2, height / 2 - h / 2, w, h);
 
   if (
     keyIsDown(87) ||
@@ -388,35 +411,41 @@ function drawTimer() {
   fill(255, 196, 94);
   textFont("pain-de-mie, sans-serif");
   textSize(64);
-  text(timer, windowWidth / 3.4, 80);
+  text(timer, width / 3.4, 80);
 }
 
 function drawInfiniteTimer() {
   fill(255, 196, 94);
   textFont("pain-de-mie, sans-serif");
   textSize(64);
-  text(infiniteTimer, windowWidth / 3.4, 80);
+  text(infiniteTimer, width / 3.4, 80);
+}
+
+function fitStage() {
+  const stage = document.getElementById("game-stage");
+  stage.style.width = `${canvasWidth}px`;
+  stage.style.height = `${canvasHeight}px`;
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight); //resize the window
+  const previous = { width, height };
+  updateScreen(window.innerWidth, window.innerHeight);
+  resizeCanvas(canvasWidth, canvasHeight);
+  fitStage();
+  // Keep each existing object at the same relative position after rotation.
+  for (const object of [ufox, ...comets, ...projectiles,
+    ...megaprojectiles, ...healthbuffs, ...shieldbuffs]) {
+    remapPosition(object, previous);
+  }
+  aurax.syncPosition();
 }
 
 //DRAW
 function drawGeneral() {
   noStroke();
   clear();
-  background(30, 30, 70);
-  drawStars();
+  // Transparent gameplay canvas reveals the continuous, full-screen starfield.
   drawCommenceComet();
-}
-function drawStars() {
-  noStroke();
-  for (let star of stars) {
-    fill(255, 255, 255, Math.abs(Math.sin(star.alpha)) * 100);
-    ellipse(star.x, star.y, 3);
-    star.alpha = star.alpha + 0.01;
-  }
 }
 function drawCommenceComet() {
   for (let comet of comets) {
@@ -428,8 +457,9 @@ function drawCommenceComet() {
 // How to keep specific amount of item on the screen help by AI - https://chatgpt.com/share/a280875f-ea21-4af9-a836-6a61f7dad987
 //BUFFS n STUFFS
 function commenceHealthBuffs() {
-  const healthBuffX = windowWidth + 100;
-  const healthBuffY = random(windowHeight);
+  if (landscapeRequired()) return;
+  const healthBuffX = width + 100;
+  const healthBuffY = random(height);
 
   if (healthbuffs.length < 1) {
     healthbuffs.push(new HealthBuff(healthBuffX, healthBuffY, 8));
@@ -450,8 +480,9 @@ function drawHealthBuffsStationary() {
 }
 
 function commenceShieldBuffs() {
-  const shieldBuffX = windowWidth + 100;
-  const shieldBuffY = random(windowHeight);
+  if (landscapeRequired()) return;
+  const shieldBuffX = width + 100;
+  const shieldBuffY = random(height);
 
   if (shieldbuffs.length < 1) {
     shieldbuffs.push(new ShieldBuff(shieldBuffX, shieldBuffY, 8));
@@ -472,8 +503,9 @@ function drawShielfBuffsStationary() {
 }
 
 function commenceArrowProjectiles() {
-  const arrowX = windowWidth + 500;
-  const arrowY = windowHeight / 2;
+  if (landscapeRequired()) return;
+  const arrowX = width + 500;
+  const arrowY = height / 2;
   const spacing = 150;
 
   if (projectiles.length < 8) {
@@ -496,8 +528,9 @@ function commenceArrowProjectiles() {
   }
 }
 function commenceSlashProjectiles() {
-  const arrowX = windowWidth + 500;
-  const arrowY = windowHeight / 2;
+  if (landscapeRequired()) return;
+  const arrowX = width + 500;
+  const arrowY = height / 2;
   const spacing = 350;
 
   if (projectiles.length < 5) {
@@ -520,8 +553,9 @@ function commenceSlashProjectiles() {
   }
 }
 function commenceShieldWallProjectiles() {
-  const arrowX = windowWidth + 500;
-  const arrowY = windowHeight / 2;
+  if (landscapeRequired()) return;
+  const arrowX = width + 500;
+  const arrowY = height / 2;
   const spacing = 350;
 
   if (projectiles.length < 5) {
@@ -547,8 +581,9 @@ function drawProjectiles() {
 }
 
 function commenceMegaProjectiles() {
-  const megaX = windowWidth + 500;
-  const megaY = windowHeight / 2 + random(-350, 350);
+  if (landscapeRequired()) return;
+  const megaX = width + 500;
+  const megaY = height / 2 + random(-height * 0.324, height * 0.324);
 
   if (megaprojectiles.length < 3) {
     megaprojectiles.push(new MegaProjectile(megaX, megaY, 7));
@@ -604,13 +639,13 @@ function paw(x, y) {
 }
 function moon() {
   moonx.draw();
-  moonx.x = windowWidth - 100;
-  moonx.y = windowHeight / 2;
+  moonx.x = width - 100;
+  moonx.y = height / 2;
 }
 function drawHealthbar6() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -641,9 +676,9 @@ function drawHealthbar6() {
   );
 }
 function drawHealthbar5() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -674,9 +709,9 @@ function drawHealthbar5() {
   );
 }
 function drawHealthbar4() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -707,9 +742,9 @@ function drawHealthbar4() {
   );
 }
 function drawHealthbar3() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -740,9 +775,9 @@ function drawHealthbar3() {
   );
 }
 function drawHealthbar2() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -773,9 +808,9 @@ function drawHealthbar2() {
   );
 }
 function drawHealthbar1() {
-  const barWidth = windowWidth * 0.2;
+  const barWidth = width * 0.2;
   const barHeight = 20;
-  const barX = (windowWidth - barWidth) / 2;
+  const barX = (width - barWidth) / 2;
   const barY = 60;
   const barPadding = 10;
 
@@ -1009,11 +1044,11 @@ function winState() {
   if (showFlyToWin === true) {
     flytoWin();
     boosterStrength = 1;
-    if (ufox.x >= windowWidth) {
+    if (ufox.x >= width) {
       showFlyToWin = false;
     }
   } else {
-    if (ufox.x >= windowWidth) {
+    if (ufox.x >= width) {
       gameWon();
       drawRestart();
     }
@@ -1053,6 +1088,9 @@ function controlsState() {
 }
 
 function movement() {
+  // Analog input: push farther for stronger thrust, including diagonals.
+  ufoHoriSpeed += joystick.axes.x * boosterStrength;
+  ufoVertSpeed += joystick.axes.y * boosterStrength;
   if (keyIsDown(38) || keyIsDown(32) || keyIsDown(87)) {
     ufoVertSpeed -= boosterStrength;
   }
@@ -1082,16 +1120,16 @@ function slowDown() {
 window.slowDown = slowDown;
 
 function borderCheck() {
-  if (ufox.x >= windowWidth - 110) {
-    ufox.x = windowWidth - 110;
+  if (ufox.x >= width - 110) {
+    ufox.x = width - 110;
   }
 
   if (ufox.x <= 105) {
     ufox.x = 105;
   }
 
-  if (ufox.y >= windowHeight - 60) {
-    ufox.y = windowHeight - 60;
+  if (ufox.y >= height - 60) {
+    ufox.y = height - 60;
   }
 
   if (ufox.y <= 65) {
